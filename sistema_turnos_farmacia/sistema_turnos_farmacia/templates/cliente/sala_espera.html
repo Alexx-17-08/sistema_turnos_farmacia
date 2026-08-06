@@ -1,51 +1,104 @@
-{% extends "layout/base.html" %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Sala de Espera - Sistema de Turnos</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💊</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card-main { background: white; border-radius: 16px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .caja-card { background: #f8f9fa; border-radius: 12px; border: 1px solid #dee2e6; transition: all 0.3s ease; }
+        .caja-card.active { background: #e7f5ff; border: 2px solid #0d6efd; box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15); }
+    </style>
+</head>
+<body>
 
-{% block content %}
-<div class="row text-center mt-4">
-    <!-- Pantalla del Turno Actual -->
-    <div class="col-md-8 mb-4">
-        <div class="card shadow-lg border-0 rounded-4 p-5">
-            <h3 class="text-muted mb-3">TURNO EN ATENCIÓN</h3>
-            <h1 class="display-1 fw-bold text-primary my-4" id="turno-actual">Sin Turno</h1>
-            <div class="alert alert-success fs-4 py-3 m-0 rounded-3" id="estado-texto">
-                Por favor espere...
+    <nav class="navbar navbar-dark bg-primary shadow-sm py-3 px-4">
+        <div class="container-fluid">
+            <span class="navbar-brand h1 mb-0"><i class="fa-solid fa-bullhorn me-2"></i> SISTEMA DE TURNOS - FARMACIA</span>
+            <div class="d-flex align-items-center gap-3">
+                <a href="/sala-espera" class="text-white text-decoration-none fw-bold bg-success px-3 py-1 rounded"><i class="fa-solid fa-tv me-1"></i> Sala de Espera</a>
+                <a href="/solicitar" class="text-white text-decoration-none fw-semibold"><i class="fa-solid fa-circle-plus me-1"></i> Solicitar Turno</a>
+                <a href="/admin" class="text-white text-decoration-none fw-semibold"><i class="fa-solid fa-user-nurse me-1"></i> Panel Farmacéutico</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <div class="row g-4 mb-4">
+            <!-- Turno Principal en Llamado -->
+            <div class="col-lg-7">
+                <div class="card card-main p-4 text-center h-100 d-flex flex-column justify-content-center">
+                    <h4 class="text-secondary mb-2">TURNO RECIENTE EN LLAMADO</h4>
+                    <h1 class="display-1 fw-bold text-primary my-2" id="display-turno-llamando">Sin Turno</h1>
+                    <div id="display-caja-llamando" class="badge bg-success fs-4 py-2 px-4 mt-2 align-self-center">Por favor espere...</div>
+                </div>
+            </div>
+            <!-- Pacientes en Espera -->
+            <div class="col-lg-5">
+                <div class="card card-main p-4 text-center h-100 d-flex flex-column justify-content-center">
+                    <h4 class="text-muted mb-2">Pacientes en Espera</h4>
+                    <h1 class="display-2 fw-bold text-dark" id="display-espera">0</h1>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado de las 6 Cajas en Tiempo Real -->
+        <div class="card card-main p-4">
+            <h5 class="text-secondary mb-3"><i class="fa-solid fa-desktop me-2"></i> Estado de las Cajas de Atención</h5>
+            <div class="row g-3" id="grid-cajas">
+                <!-- Se llena dinámicamente -->
             </div>
         </div>
     </div>
 
-    <!-- Panel de Pacientes en Espera -->
-    <div class="col-md-4 mb-4">
-        <div class="card shadow-lg border-0 rounded-4 p-4 h-100 d-flex flex-column justify-content-center">
-            <h4 class="text-muted mb-3">Pacientes en Espera</h4>
-            <h1 class="display-1 fw-bold text-dark" id="contador-espera">0</h1>
-        </div>
-    </div>
-</div>
-{% endblock %}
+    <script>
+        function actualizarSalaEspera() {
+            fetch('/api/estado-actual')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('display-espera').innerText = data.pacientes_en_espera;
 
-{% block scripts %}
-<script>
-    const socket = io();
+                    let cajasDict = {};
+                    if (data.cajas_llamando && data.cajas_llamando.length > 0) {
+                        data.cajas_llamando.forEach(item => {
+                            cajasDict[item.caja] = item.numero;
+                        });
 
-    // Escuchamos las actualizaciones enviadas desde app.py
-    socket.on('actualizar_pantalla', function(data) {
-        const turnoActualElem = document.getElementById('turno-actual');
-        const estadoTextoElem = document.getElementById('estado-texto');
-        const contadorEsperaElem = document.getElementById('contador-espera');
+                        // El último llamado general corresponde al último elemento recibido
+                        let ultimoLlamado = data.cajas_llamando[data.cajas_llamando.length - 1];
+                        document.getElementById('display-turno-llamando').innerText = ultimoLlamado.numero;
+                        document.getElementById('display-caja-llamando').innerText = `Atendiendo en ${ultimoLlamado.caja}`;
+                        document.getElementById('display-caja-llamando').style.display = 'inline-block';
+                    } else {
+                        document.getElementById('display-turno-llamando').innerText = "Sin Turno";
+                        document.getElementById('display-caja-llamando').innerText = "Por favor espere...";
+                    }
 
-        // Actualizar pacientes en espera
-        contadorEsperaElem.innerText = data.en_espera;
+                    // Renderizar las 6 cajas de forma independiente
+                    let gridCajas = document.getElementById('grid-cajas');
+                    gridCajas.innerHTML = "";
+                    for (let i = 1; i <= 6; i++) {
+                        let nombreCaja = `Caja ${i}`;
+                        let turnoEnCaja = cajasDict[nombreCaja] || "Libre";
+                        let isActive = cajasDict[nombreCaja] ? "active" : "";
 
-        // Actualizar el turno que se está atendiendo
-        if (data.turno_actual) {
-            turnoActualElem.innerText = data.turno_actual.ticket;
-            estadoTextoElem.innerText = `Atendiendo en Caja ${data.turno_actual.caja}`;
-            estadoTextoElem.className = "alert alert-primary fs-4 py-3 m-0 rounded-3";
-        } else {
-            turnoActualElem.innerText = "Sin Turno";
-            estadoTextoElem.innerText = "Por favor espere...";
-            estadoTextoElem.className = "alert alert-success fs-4 py-3 m-0 rounded-3";
+                        gridCajas.innerHTML += `
+                            <div class="col-md-4 col-sm-6">
+                                <div class="caja-card p-3 text-center ${isActive}">
+                                    <h6 class="fw-bold text-muted mb-1">${nombreCaja}</h6>
+                                    <h3 class="fw-bold ${cajasDict[nombreCaja] ? 'text-primary' : 'text-muted'} mb-0">${turnoEnCaja}</h3>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
         }
-    });
-</script>
-{% endblock %}
+
+        setInterval(actualizarSalaEspera, 2000);
+        actualizarSalaEspera();
+    </script>
+</body>
+</html>
