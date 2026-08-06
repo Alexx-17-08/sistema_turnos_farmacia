@@ -1,0 +1,34 @@
+{% extends "layout/base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card mt-5 shadow">
+            <div class="card-header bg-primary text-white text-center">
+                <h4 class="m-0">Acceso al Sistema</h4>
+            </div>
+            <div class="card-body p-4">
+                
+                <!-- Mostrar mensaje de error si las credenciales son incorrectas -->
+                {% if error %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                {% endif %}
+                
+                <!-- ACCIÓN CORREGIDA: Apunta directo a /login -->
+                <form action="/login" method="POST">
+                    <div class="mb-3">
+                        <label for="usuario" class="form-label fw-bold">Usuario:</label>
+                        <input type="text" class="form-control" id="usuario" name="usuario" placeholder="Ingresa tu usuario" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="contrasena" class="form-label fw-bold">Contraseña:</label>
+                        <input type="password" class="form-control" id="contrasena" name="contrasena" placeholder="Ingresa tu contraseña" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">Ingresar al Panel</button>
+                </form>
+                
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

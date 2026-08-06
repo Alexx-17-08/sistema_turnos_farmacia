@@ -1,0 +1,114 @@
+:root {
+    --fondo-sitio: #e9f2f9; 
+    --color-texto: #2c3e50;
+    --blanco: #ffffff;
+    --verde-farmacia: #27ae60;
+    --azul-medico: #2980b9;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--fondo-sitio);
+    color: var(--color-texto);
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+header {
+    background: var(--azul-medico);
+    color: var(--blanco);
+    padding: 20px 0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+header a {
+    color: var(--blanco);
+    text-decoration: none;
+    font-weight: 600;
+    margin: 0 15px;
+    letter-spacing: 1px;
+    opacity: 0.8;
+    transition: 0.3s;
+}
+
+header a:hover {
+    opacity: 1;
+}
+
+main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 75vh;
+    padding: 20px;
+}
+
+.card {
+    background: var(--blanco);
+    border-radius: 15px; 
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(41, 128, 185, 0.1); 
+    width: 100%;
+    max-width: 500px;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.numero-gigante {
+    font-size: 7rem; 
+    font-weight: 900;
+    margin: 10px 0;
+    color: var(--color-texto);
+    text-shadow: 2px 2px 0px rgba(0,0,0,0.05);
+}
+
+.titulo-cliente { color: var(--verde-farmacia); }
+.titulo-admin { color: var(--azul-medico); }
+
+.instrucciones {
+    background-color: #fcf8e3;
+    color: #8a6d3b;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+    border: 1px solid #faebcc;
+}
+
+.btn-cliente, .btn-admin {
+    display: inline-block;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 8px; 
+    font-size: 1.2rem;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: bold;
+    color: var(--blanco);
+    transition: all 0.3s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.btn-cliente { background-color: var(--verde-farmacia); }
+.btn-cliente:hover { background-color: #2ecc71; }
+
+.btn-admin { background-color: var(--azul-medico); }
+.btn-admin:hover { background-color: #3498db; }
+
+input {
+    width: 85%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 2px solid #bdc3c7;
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+}
+
+input:focus {
+    border-color: var(--azul-medico);
+}

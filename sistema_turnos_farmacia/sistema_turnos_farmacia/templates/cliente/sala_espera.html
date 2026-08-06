@@ -1,0 +1,51 @@
+{% extends "layout/base.html" %}
+
+{% block content %}
+<div class="row text-center mt-4">
+    <!-- Pantalla del Turno Actual -->
+    <div class="col-md-8 mb-4">
+        <div class="card shadow-lg border-0 rounded-4 p-5">
+            <h3 class="text-muted mb-3">TURNO EN ATENCIÓN</h3>
+            <h1 class="display-1 fw-bold text-primary my-4" id="turno-actual">Sin Turno</h1>
+            <div class="alert alert-success fs-4 py-3 m-0 rounded-3" id="estado-texto">
+                Por favor espere...
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel de Pacientes en Espera -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-lg border-0 rounded-4 p-4 h-100 d-flex flex-column justify-content-center">
+            <h4 class="text-muted mb-3">Pacientes en Espera</h4>
+            <h1 class="display-1 fw-bold text-dark" id="contador-espera">0</h1>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const socket = io();
+
+    // Escuchamos las actualizaciones enviadas desde app.py
+    socket.on('actualizar_pantalla', function(data) {
+        const turnoActualElem = document.getElementById('turno-actual');
+        const estadoTextoElem = document.getElementById('estado-texto');
+        const contadorEsperaElem = document.getElementById('contador-espera');
+
+        // Actualizar pacientes en espera
+        contadorEsperaElem.innerText = data.en_espera;
+
+        // Actualizar el turno que se está atendiendo
+        if (data.turno_actual) {
+            turnoActualElem.innerText = data.turno_actual.ticket;
+            estadoTextoElem.innerText = `Atendiendo en Caja ${data.turno_actual.caja}`;
+            estadoTextoElem.className = "alert alert-primary fs-4 py-3 m-0 rounded-3";
+        } else {
+            turnoActualElem.innerText = "Sin Turno";
+            estadoTextoElem.innerText = "Por favor espere...";
+            estadoTextoElem.className = "alert alert-success fs-4 py-3 m-0 rounded-3";
+        }
+    });
+</script>
+{% endblock %}

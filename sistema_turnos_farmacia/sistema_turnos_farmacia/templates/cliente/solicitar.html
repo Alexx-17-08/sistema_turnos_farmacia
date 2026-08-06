@@ -1,0 +1,65 @@
+{% extends "layout/base.html" %}
+
+{% block content %}
+<div class="row justify-content-center text-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-body p-5">
+                <h2 class="mb-4 fw-bold">Bienvenido a la Farmacia</h2>
+                <p class="mb-4 text-muted fs-5">Seleccione su tipo de atención para obtener un turno:</p>
+                
+                <!-- Botón Turno General -->
+                <!-- Al hacer clic, llama a la función pedirTurno('general') -->
+                <button class="btn btn-primary btn-lg w-100 mb-4 py-3 fs-4 rounded-3 shadow-sm" onclick="pedirTurno('general')">
+                    👤 Turno General (G)
+                </button>
+                
+                <!-- Botón Turno Prioritario -->
+                <!-- Al hacer clic, llama a la función pedirTurno('prioritario') -->
+                <button class="btn btn-warning btn-lg w-100 py-3 fs-4 text-dark fw-bold rounded-3 shadow-sm" onclick="pedirTurno('prioritario')">
+                    ⭐ Turno Prioritario (P)
+                    <br><small class="fs-6 fw-normal">(Tercera Edad / Embarazadas / Discapacidad)</small>
+                </button>
+
+                <!-- Área donde aparecerá el ticket generado (oculta por defecto) -->
+                <div id="resultado-turno" class="mt-4 p-3 bg-light rounded-3 border" style="display: none;">
+                    <h4 class="text-success fw-bold">¡Turno Generado Exitosamente!</h4>
+                    <h1 class="display-2 fw-bold text-primary my-2" id="numero-ticket">--</h1>
+                    <p class="text-muted m-0">Por favor, tome asiento y espere a ser llamado en pantalla.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<!-- BLOQUE DE JAVASCRIPT PARA SOCKET.IO -->
+{% block scripts %}
+<script>
+    // 1. Nos conectamos al servidor de SocketIO
+    const socket = io();
+
+    // 2. Función que se dispara al presionar los botones
+    function pedirTurno(tipoTurno) {
+        // Le enviamos al servidor (app.py) el evento 'solicitar_turno'
+        socket.emit('solicitar_turno', { tipo: tipoTurno });
+    }
+
+    // 3. Escuchamos la respuesta del servidor cuando el ticket ya fue creado
+    socket.on('ticket_creado', function(data) {
+        // Hacemos visible el cuadro de confirmación
+        const resultadoDiv = document.getElementById('resultado-turno');
+        resultadoDiv.style.display = 'block';
+        
+        // Insertamos el número de ticket (ej: G-001 o P-001) en la pantalla
+        document.getElementById('numero-ticket').innerText = data.ticket;
+        
+        // Magia: Ocultamos el mensaje después de 5 segundos para que la pantalla 
+        // quede limpia para el siguiente paciente que llegue al tótem.
+        setTimeout(() => {
+            resultadoDiv.style.display = 'none';
+            document.getElementById('numero-ticket').innerText = '--';
+        }, 5000);
+    });
+</script>
+{% endblock %}

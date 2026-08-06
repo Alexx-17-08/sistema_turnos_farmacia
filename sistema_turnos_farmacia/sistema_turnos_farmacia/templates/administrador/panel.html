@@ -1,0 +1,97 @@
+{% extends "layout/base.html" %}
+
+{% block content %}
+<div class="row justify-content-center text-center mt-4">
+    <div class="col-md-8">
+        <div class="card shadow-lg border-0 rounded-4 p-4">
+            
+            <!-- Selector de Caja -->
+            <div class="mb-4 row align-items-center justify-content-center">
+                <label for="select-caja" class="col-auto col-form-label fw-bold fs-5">Seleccione su Caja de Atención:</label>
+                <div class="col-auto">
+                    <select id="select-caja" class="form-select form-select-lg fw-bold text-primary">
+                        <option value="1">Caja 1</option>
+                        <option value="2">Caja 2</option>
+                        <option value="3">Caja 3</option>
+                        <option value="4">Caja 4</option>
+                        <option value="5">Caja 5</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- Estado Actual en la Caja -->
+            <div class="my-4">
+                <h4 class="text-muted">Atendiendo Actualmente:</h4>
+                <h1 class="display-3 fw-bold text-primary my-3" id="panel-turno-actual">Ninguno</h1>
+                <p class="text-muted fs-5 m-0">Pacientes en Espera (Global): <span id="panel-espera" class="fw-bold text-dark">0</span></p>
+            </div>
+
+            <!-- Botones de Acción del Operador -->
+            <div class="d-grid gap-3 mt-4">
+                <button class="btn btn-primary btn-lg py-3 fw-bold fs-5 shadow-sm" onclick="llamarSiguiente()">
+                    🔔 Llamar Siguiente Turno
+                </button>
+                <div class="row">
+                    <div class="col-md-6 mb-2 mb-md-0">
+                        <button class="btn btn-success btn-lg w-100 py-3 fw-bold shadow-sm" onclick="cambiarEstado('atendido')">
+                            ✔ Finalizar / Atendido
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button class="btn btn-danger btn-lg w-100 py-3 fw-bold shadow-sm" onclick="cambiarEstado('ausente')">
+                            ✖ Marcar Ausente
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const socket = io();
+
+    // Obtener la caja seleccionada actualmente
+    function getCajaSeleccionada() {
+        return document.getElementById('select-caja').value;
+    }
+
+    // Enviar evento para llamar al siguiente turno
+    function llamarSiguiente() {
+        const caja = getCajaSeleccionada();
+        socket.emit('llamar_siguiente', { caja: caja });
+    }
+
+    // Enviar evento para cambiar estado (atendido / ausente)
+    function cambiarEstado(estado) {
+        const caja = getCajaSeleccionada();
+        socket.emit('cambiar_estado', { caja: caja, estado: estado });
+    }
+
+    // Escuchar actualizaciones del servidor en tiempo real
+    socket.on('actualizar_panel_operador', function(data) {
+        document.getElementById('panel-espera').innerText = data.en_espera;
+
+        const cajaActual = getCajaSeleccionada();
+        
+        // Si la actualización corresponde a la caja seleccionada por este operador
+        if (data.caja_actualizada === cajaActual) {
+            if (data.turno_actual && data.turno_actual.estado === 'en_atencion') {
+                document.getElementById('panel-turno-actual').innerText = data.turno_actual.ticket;
+            } else {
+                document.getElementById('panel-turno-actual').innerText = "Ninguno";
+            }
+        }
+    });
+
+    // Si el operador cambia de caja en el selector, ajustar la visualización
+    document.getElementById('select-caja').addEventListener('change', function() {
+        document.getElementById('panel-turno-actual').innerText = "Ninguno";
+    });
+</script>
+{% endblock %}
